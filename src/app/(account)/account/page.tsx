@@ -10,51 +10,53 @@ import { getProducts } from '@/features/pricing/controllers/get-products';
 import { Price, ProductWithPrices } from '@/features/pricing/types';
 
 export default async function AccountPage() {
-  const [session, subscription, products] = await Promise.all([getSession(), getSubscription(), getProducts()]);
+  const [session, subscriptionRaw, productsRaw] = await Promise.all([
+    getSession(),
+    getSubscription(),
+    getProducts(),
+  ]);
 
   if (!session) {
     redirect('/login');
   }
 
+  // Strong type assertions to prevent 'never' issues
+  const products: ProductWithPrices[] = Array.isArray(productsRaw) ? productsRaw : [];
+  const subscription = subscriptionRaw as any; // Temporary broad type
+
+  // Find matching product/price
   let userProduct: ProductWithPrices | undefined;
   let userPrice: Price | undefined;
 
- let userProduct = null;
-let userPrice = null;
-
-if (subscription) {
-  for (const product of products) {
-    // Safe guard against missing prices
-    const prices = product.prices || [];
-    for (const price of prices) {
-      if (price.id === subscription.price_id) {
-        userProduct = product;
-        userPrice = price;
-        break;
+  if (subscription?.price_id && products.length > 0) {
+    for (const product of products) {
+      const prices = product.prices || [];
+      for (const price of prices) {
+        if (price.id === subscription.price_id) {
+          userProduct = product;
+          userPrice = price;
+          break;
+        }
       }
+      if (userProduct) break;
     }
-    if (userProduct) break;
   }
-}
-      
-    
-  
 
   return (
-    <section className='rounded-lg bg-black px-4 py-16'>
-      <h1 className='mb-8 text-center'>Account</h1>
+    <section className="rounded-lg bg-black px-4 py-16">
+      <h1 className="mb-8 text-center text-4xl font-bold">Account</h1>
 
-      <div className='flex flex-col gap-4'>
+      <div className="flex flex-col gap-4">
         <Card
-          title='Your Plan'
+          title="Your Plan"
           footer={
             subscription ? (
-              <Button size='sm' variant='secondary' asChild>
-                <Link href='/manage-subscription'>Manage your subscription</Link>
+              <Button size="sm" variant="secondary" asChild>
+                <Link href="/manage-subscription">Manage your subscription</Link>
               </Button>
             ) : (
-              <Button size='sm' variant='secondary' asChild>
-                <Link href='/pricing'>Start a subscription</Link>
+              <Button size="sm" variant="secondary" asChild>
+                <Link href="/pricing">Start a subscription</Link>
               </Button>
             )
           }
@@ -62,7 +64,7 @@ if (subscription) {
           {userProduct && userPrice ? (
             <PricingCard product={userProduct} price={userPrice} />
           ) : (
-            <p>You don&apos;t have an active subscription</p>
+            <p className="text-zinc-400">You don&apos;t have an active subscription yet.</p>
           )}
         </Card>
       </div>
@@ -79,12 +81,14 @@ function Card({
   footer?: ReactNode;
 }>) {
   return (
-    <div className='m-auto w-full max-w-3xl rounded-md bg-zinc-900'>
-      <div className='p-4'>
-        <h2 className='mb-1 text-xl font-semibold'>{title}</h2>
-        <div className='py-4'>{children}</div>
+    <div className="m-auto w-full max-w-3xl rounded-md bg-zinc-900">
+      <div className="p-4">
+        <h2 className="mb-1 text-xl font-semibold">{title}</h2>
+        <div className="py-4">{children}</div>
       </div>
-      <div className='flex justify-end rounded-b-md border-t border-zinc-800 p-4'>{footer}</div>
+      <div className="flex justify-end rounded-b-md border-t border-zinc-800 p-4">
+        {footer}
+      </div>
     </div>
   );
 }

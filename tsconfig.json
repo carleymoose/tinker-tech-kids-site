@@ -13,6 +13,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "noImplicitAny": false,
     "plugins": [
       {
         "name": "next"
@@ -22,6 +23,6 @@
       "@/*": ["./src/*"]
     },
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "prettier.config.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "prettier.config.js", "src/middleware.ts.bak"],
   "exclude": ["node_modules"]
 }

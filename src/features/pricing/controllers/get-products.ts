@@ -1,6 +1,7 @@
+import { ProductWithPrices } from '@/features/pricing/types';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
-export async function getProducts() {
+export async function getProducts(): Promise<ProductWithPrices[]> {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -12,8 +13,9 @@ export async function getProducts() {
     .order('unit_amount', { referencedTable: 'prices' });
 
   if (error) {
-    console.error(error.message);
+    console.error('Error fetching products:', error.message);
+    return [];
   }
 
-  return data ?? [];
+  return (data as ProductWithPrices[]) ?? [];
 }
