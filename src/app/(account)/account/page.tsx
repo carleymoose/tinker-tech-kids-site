@@ -19,16 +19,26 @@ export default async function AccountPage() {
   let userProduct: ProductWithPrices | undefined;
   let userPrice: Price | undefined;
 
-  if (subscription) {
-    for (const product of products) {
-      for (const price of product.prices) {
-        if (price.id === subscription.price_id) {
-          userProduct = product;
-          userPrice = price;
-        }
+ let userProduct = null;
+let userPrice = null;
+
+if (subscription) {
+  for (const product of products) {
+    // Safe guard against missing prices
+    const prices = product.prices || [];
+    for (const price of prices) {
+      if (price.id === subscription.price_id) {
+        userProduct = product;
+        userPrice = price;
+        break;
       }
     }
+    if (userProduct) break;
   }
+}
+      }
+    
+  
 
   return (
     <section className='rounded-lg bg-black px-4 py-16'>
