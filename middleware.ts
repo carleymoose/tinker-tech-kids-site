@@ -1,9 +1,8 @@
+import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createServerClient } from '@supabase/ssr';
-
 export async function middleware(request: NextRequest) {
-  const supabaseResponse = NextResponse.next({
+  let response = NextResponse.next({
     request,
   });
 
@@ -16,13 +15,13 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              supabaseResponse.cookies.set(name, value, options);
-            });
-          } catch (error) {
-            console.error('Middleware cookie error:', error);
-          }
+          response = NextResponse.next({
+            request,
+          });
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
@@ -31,25 +30,7 @@ export async function middleware(request: NextRequest) {
   // Refresh session
   await supabase.auth.getUser();
 
-  // Protect routes
-  const protectedPaths = ['/account', '/manage-subscription'];
-  const isProtected = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
-
-  if (isProtected) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
-    }
-  }
-
-  return supabaseResponse;
+  return response;
 }
 
 export const config = {
